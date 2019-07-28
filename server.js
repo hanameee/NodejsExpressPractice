@@ -1,7 +1,8 @@
 var express = require('express');
 var app = express();
+const fs = require("fs");
 // 라우터 모듈인 main.js 를 불러와서 app 에 전달
-var router = require('./router/main')(app);
+var router = require('./router/main')(app,fs);
 
 // 서버가 읽을 수 있도록 HTML 의 위치를 정의 (__dirname은 현재 디렉토리명)
 app.set('views', __dirname + '/views');

@@ -113,14 +113,19 @@ module.exports = function(app)
 ```javascript
 var express = require('express');
 var app = express();
+// 라우터 모듈인 main.js 를 불러와서 app 에 전달
 var router = require('./router/main')(app);
 
+// 서버가 읽을 수 있도록 HTML 의 위치를 정의 (__dirname은 현재 디렉토리명)
 app.set('views', __dirname + '/views');
+
+// 서버가 HTML 렌더링을 할 때, EJS 엔진을 사용하도록 설정
 app.set('view engine', 'ejs');
 app.engine('html', require('ejs').renderFile);
 
+// 서버 구동 시 콘솔창에 아래 메세지 출력
 var server = app.listen(3000, function(){
-    console.log("Express server has started on port 3000")
+    console.log("Express server has started on port 3000");
 });
 ```
 
@@ -138,13 +143,87 @@ body{
 }
 ```
 
-그 후, server.js 맨 아래에 해당 코드 추가
+그 후, `server.js` 맨 아래에 해당 코드 추가
 
 ```javascript
 app.use(express.static('public'));
 ```
 
-
-
 서버 실행 후 http://localhost:3000/ 에 접속했을 때 css 가 적용된 페이지가 나타나게 됨 :)
 
+
+
+## 2) RESTful API
+
+### 2-1) REST란?
+
+**RE**presentational **S**tate **T**ransfer 의 약자로,  월드와이드웹(www) 와 같은 하이퍼미디어 시스템을 위한 소프트웨어 아키텍쳐 중 하나의 형식임.
+REST 서버는 클라이언트로 하여금 HTTP 프로토콜을 사용해 서버의 정보에 접근 및 변경을 가능케 함. 여기서의 정보는 text, xml, json 등 형식으로 제공되는데, 요즘은 대부분 json임.
+
+REST 기반 아키텍처에서 자주 사용되는 메소드는 다음과 같음
+
+1. **GET** – 조회
+2. **PUT** –  생성 및 업데이트
+3. **DELETE** – 제거
+4. **POST** – 생성
+
+둘 다 생성하는 POST 와 PUT 의 차이점은 아래 링크에서 추가 학습!
+[PUT vs POST, REST API (1ambda Blog)](http://1ambda.github.io/put-vs-post-restful-api/) : http://1ambda.github.io/put-vs-post-restful-api/)
+
+### 2-2) DB 생성
+
+/data 디렉토리를 생성하고, 그 안에 `user.json` 파일을 아래와 같이 만들자.
+
+```json
+{
+    "first_user": {
+        "password": "first_pass",
+        "name": "abet"
+    },
+    "second_user":{
+        "password": "second_pass",
+        "name": "betty"
+    }
+}
+```
+
+### 2-3) 첫번째 API - GET/list
+
+모든 유저 리스트를 출력하는 GET API 를 작성해보자.
+우선, user.json 파일을 읽어야 하므로, fs 모듈을 사용해야 함.
+
+```bash
+$npm install fs
+```
+
+`router/main.js` 파일을 아래와 같이 업데이트
+
+```javascript
+module.exports = function(app, fs)
+{
+     app.get('/',function(req,res){
+         res.render('index', {
+             title: "MY HOMEPAGE",
+             length: 5
+         })
+     });
+
+    app.get('/list', function (req, res) {
+       fs.readFile( __dirname + "/../data/" + "user.json", 'utf8', function (err, data) {
+           console.log( data );
+           res.end( data );
+       });
+    })
+
+
+}
+```
+
+`server.js` 파일의 router 부분과 fs 모듈 require 부분도 업데이트 해주기!
+
+```javascript
+const fs = require("fs"); //상단에
+var router = require('./router/main')(app,fs); //업데이트
+```
+
+이후 http://localhost:3000/list 에 접속하면 json 파일 내용을 브라우저에서 볼 수 있음.
